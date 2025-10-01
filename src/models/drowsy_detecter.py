@@ -10,6 +10,15 @@ import math
 
 import mediapipe as mp
 
+import threading
+import playsound  # 或 winsound / simpleaudio 皆可
+
+def play_alert_sound():
+    try:
+        playsound.playsound("alert1.mp3", block=True)  # block=True 正常播放，但在新 thread 不會卡主程式
+    except Exception as e:
+        print(f"Sound error: {e}")
+
 
 class Direction(Enum):
     UP = "UP"
@@ -427,6 +436,9 @@ class DrowsyDetector(object):
                         #判斷若閉眼時間超過閥值則認定為長時間閉眼(疲勞)
                         if eyes_closed_frames >= self.EYES_CLOSED_FRAME_THRES and not eyes_closed_long:
                             eyes_closed_long = True
+                            threading.Thread(target=play_alert_sound, daemon=True).start()
+
+
                     else:
                         if eyes_closed_long:
                             eyes_closed_frames = 0
@@ -441,6 +453,7 @@ class DrowsyDetector(object):
                     if yawn and mouth_face_ratio > self._yawn_ratio_threshold:
                         yawn_frames += 1
                         if yawn_frames >= self.YAWN_FRAME_THRES and not yawn_long:
+                            threading.Thread(target=play_alert_sound, daemon=True).start()
                             yawn_count += 1
                             yawn_long = True
                     else:
